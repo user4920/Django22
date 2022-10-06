@@ -5,8 +5,10 @@ class Post(models.Model):
     title = models.CharField(max_length=30)
     content = models.TextField()
 
-    head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d', blank=True) #(_media/)blog/images/년/월/일
+    head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d/', blank=True) #(_media/)blog/images/년/월/일
     # %Y 2022, %y 22
+    file_upload = models.FileField(upload_to='blog/files/%Y/%m/%d/', blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
