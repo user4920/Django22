@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from bs4 import BeautifulSoup
-from .models import Post
+from .models import Post, Category
 from django.contrib.auth.models import User
 
 # Create your tests here.
@@ -11,17 +11,31 @@ class TestView(TestCase):
         self.user_kim = User.objects.create_user(username="kim", password="abcd1234")
         self.user_lee = User.objects.create_user(username="lee", password="abcd1234")
 
+        self.category_com = Category.objects.create(name="computer", slug="computer")
+        self.category_cul = Category.objects.create(name="culture", slug="culture")
+
+        post_001 = Post.objects.create(title="첫번째 포스트", content="첫번째 포스트입니다",
+                                       author=self.user_kim,
+                                       category=self.category_com)
+        post_002 = Post.objects.create(title="두번째 포스트", content="두번째 포스트입니다",
+                                       author=self.user_lee,
+                                       category=self.category_cul)
+        post_003 = Post.objects.create(title="세번째 포스트", content="세번째 포스트입니다",
+                                       author=self.user_lee)
+
     def nav_test(self, soup):
         navbar = soup.nav
         self.assertIn('Blog', navbar.text)
         self.assertIn('AboutMe', navbar.text)
 
-    def test_post_list(self):
-        response = self.client.get('/blog/')
-        # response 결과가 정상적인지
-        self.assertEqual(response.status_code, 200)
+        home_btn = navbar.find('a', text="Home")
+        self.assertEqual(home_btn.attrs['href'], "/")
+        blog_btn = navbar.find('a', text="Blog")
+        self.assertEqual(blog_btn.attrs['href'], "/blog/")
+        about_btn = navbar.find('a', text="AboutMe")
+        self.assertEqual(about_btn.attrs['href'], "/about_me/")
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+    def test_post_list(self):
         # title이 정상적으로 보이는지
         self.assertEqual(soup.title.text, 'Blog')
 
@@ -31,28 +45,37 @@ class TestView(TestCase):
         #self.assertIn('AboutMe', navbar.text)
         self.nav_test(soup)
 
-        # Post가 정상적으로 보이는지
-        # 1. 맨처음엔 포스트가 하나도 안보임
-        self.assertEqual(Post.objects.count(), 0)
-        main_area = soup.find('div', id="main-area")
-        self.assertIn('아무 게시물이 없습니다.', main_area.text)
-
-        # 2. Post가 있는 경우
-        post_001 = Post.objects.create(title="첫번째 포스트", content="첫번째 포스트입니다",
-                                       author=self.user_kim)
-        post_002 = Post.objects.create(title="두번째 포스트", content="두번째 포스트입니다",
-                                       author=self.user_lee)
         self.assertEqual(Post.objects.count(), 2)
 
         response = self.client.get('/blog/')
         self.assertEqual(response.status_code, 200)
         soup = BeautifulSoup(response.content, 'html.parser')
         main_area = soup.find('div', id="main-area")
-        self.assertIn(post_001.title, main_area.text)
-        self.assertIn(post_002.title, main_area.text)
-        self.assertIn(post_001.author.username.upper(), main_area.text)
-        self.assertIn(post_002.author.username.upper(), main_area.text)
+        self.assertIn(self.post_001.title, main_area.text)
+        self.assertIn(self.post_002.title, main_area.text)
+        self.assertIn(self.post_001.author.username.upper(), main_area.text)
+        self.assertIn(self.post_002.author.username.upper(), main_area.text)
         self.assertNotIn('아무 게시물이 없습니다.', main_area.text)
+
+        # Post가 정상적으로 보이는지
+        # 1. 맨처음엔 포스트가 하나도 안보임
+        Post.objects.all().delete()
+        self.assertEqual(Post.objects.count(), 0)
+
+        response = self.client.get('/blog/')
+        # response 결과가 정상적인지
+        self.assertEqual(response.status_code, 200)
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        main_area = soup.find('div', id="main-area")
+        self.assertIn('아무 게시물이 없습니다.', main_area.text)
+
+        # 2. Post가 있는 경우
+        #post_001 = Post.objects.create(title="첫번째 포스트", content="첫번째 포스트입니다",
+        #                               author=self.user_kim)
+        #post_002 = Post.objects.create(title="두번째 포스트", content="두번째 포스트입니다",
+        #                               author=self.user_lee)
 
     def test_post_detail(self):
         post_001 = Post.objects.create(title="첫번째 포스트", content="첫번째 포스트입니다",

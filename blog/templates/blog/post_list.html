@@ -12,6 +12,15 @@
             <img class="card-img-top" src="https://picsum.photos/seed/{{p.pk}}/800/200" alt="random image" />
             {% endif %}
             <div class="card-body">
+                {% if p.category %}
+                    <span class="badge abdge-secondary float-right">
+                          <a href="{{p.category.get_absolute_ulr}}">{{p.category}}</a>
+                    </span>
+                {% else %}
+                    <span class="badge abdge-secondary float-right">
+                        <a href="/blog/category/no_category/">미분류</a>
+                    </span>
+                {% endif %}
                 <h2 class="card-title">{{p.title | upper}}</h2>
                 {% if p.hook_text %}
                 <h5 class="text-muted">{{p.hook_text}}</h5>
