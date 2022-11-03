@@ -2,6 +2,12 @@
 
 {% block main_area %}
           <h2>Blog</h2>
+            {% if tag %}
+                - <i class="fas fa-tag"></i>
+                <span class="badge badge-secondary">
+                    {{ tag }} ({{tag.post_set.count}})
+                </span>
+            {% endif %}
           <!-- Featured blog post-->
           {% if post_list.exists %}
           {% for p in post_list %}
@@ -26,6 +32,12 @@
                 <h5 class="text-muted">{{p.hook_text}}</h5>
                 {% endif %}
                 <p class="card-text">{{p.content | truncatechars:100}}</p>
+                {% if p.tags.exists %}
+                    <i class="fas fa-tag"></i>
+                    {% for t in p.tags.iterator %}
+                        <span>
+                            <a href="{{t.get_absolute_url}}">{{t}}</a>
+                        </span>
                 <a class="btn btn-primary" href="{{p.get_absolute_url}}">Read more →</a>
             </div>
             <div class="card-footer">
